@@ -1,0 +1,46 @@
+name: Risk Check
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  risk-assessment:
+    name: Assess Change Risk
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Check changed files
+        run: |
+          echo "Checking changed files..."
+
+          CHANGED_FILES=$(git diff --name-only \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}")
+
+          echo "$CHANGED_FILES"
+
+          HIGH_RISK=false
+
+          if echo "$CHANGED_FILES" | grep -E \
+            '(^\.github/workflows/|package-lock.json|package.json|security|auth)' \
+            > /dev/null; then
+            HIGH_RISK=true
+          fi
+
+          if [ "$HIGH_RISK" = true ]; then
+            echo "HIGH RISK CHANGE DETECTED"
+            echo "Additional review is required."
+            exit 1
+          fi
+
+          echo "Risk level: LOW"
+          echo "Normal review process may continue."
