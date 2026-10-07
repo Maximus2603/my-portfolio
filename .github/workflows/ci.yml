@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  deterministic-ci:
+    name: Deterministic CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Validate HTML
+        run: |
+          test -f index.html
+          test -f style.css
+          test -f script.js
+
+      - name: Check HTML structure
+        run: |
+          grep -q "<html" index.html
+          grep -q "<head>" index.html
+          grep -q "<body>" index.html
+
+      - name: Check required sections
+        run: |
+          grep -q 'id="about"' index.html
+          grep -q 'id="skills"' index.html
+          grep -q 'id="projects"' index.html
+          grep -q 'id="contact"' index.html
+
+      - name: Deterministic CI passed
+        run: echo "All deterministic checks passed."
